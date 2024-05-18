@@ -3,6 +3,9 @@ from selenium.webdriver.chrome.options import Options
 import json
 from time import sleep
 import sys
+from selenium.webdriver.common.by import By
+
+#driver = webdriver.Chrome(executable_path='C:\Python312\Scripts')
 chrome_option = Options()
 chrome_option.add_experimental_option("detach", True)
 driver = webdriver.Chrome()
@@ -26,8 +29,9 @@ def setUp():
     driver.implicitly_wait(30)
 
 def Login():
-    driver.find_element_by_xpath("//*[@class='btn-signin item d-none d-lg-inline-block']").click()
+    # driver.find_element_by_xpath("//*[@class='btn-signin item d-none d-lg-inline-block']").click()
     sleep(1)
+    fruit = driver.find_element(By.XPATH, "//*[@class='btn-signin item d-none d-lg-inline-block']")
     username = driver.find_element_by_id("username")
     username.send_keys(email)
     pwd = driver.find_element_by_id("password")
