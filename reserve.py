@@ -28,13 +28,24 @@ def setUp():
     driver.get(base_url)
     driver.implicitly_wait(30)
 
+def prepUserData():
+    print("email=", email)
+    print("password=", password)
+    print("zone=", zone)
+    print("concert=", concert)
+    print("seat=", seat)
+    print("show=", show)
+    
+
 def Login():
     # driver.find_element_by_xpath("//*[@class='btn-signin item d-none d-lg-inline-block']").click()
     sleep(1)
-    fruit = driver.find_element(By.XPATH, "//*[@class='btn-signin item d-none d-lg-inline-block']")
-    username = driver.find_element_by_id("username")
+    login_btn = driver.find_element(By.XPATH, "//*[@class='btn-signin item d-none d-lg-inline-block']").click()
+    print("found login button element by XPATH: ", login_btn)
+    username = driver.find_element(By.NAME, "username")
+    print("found username element by ID: ", username)
     username.send_keys(email)
-    pwd = driver.find_element_by_id("password")
+    pwd = driver.find_element(By.NAME, "password")
     pwd.send_keys(password)
     driver.find_element_by_xpath("//button[@class='btn-red btn-signin']").click()
     sleep(2)
@@ -141,6 +152,7 @@ def confirm_ticketprotect():
  
 
 setUp()
+prepUserData()
 Login()
 SelectShow()
 SelectZone(zone)
