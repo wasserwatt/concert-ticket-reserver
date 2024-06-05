@@ -39,7 +39,9 @@ def prepUserData():
 
 def Login():
     # driver.find_element_by_xpath("//*[@class='btn-signin item d-none d-lg-inline-block']").click()
-    sleep(1)
+    print("login initiated")
+    sleep(5)
+    print("pass 100 seconds")
     login_btn = driver.find_element(By.XPATH, "//*[@class='btn-signin item d-none d-lg-inline-block']").click()
     print("found login button element by XPATH: ", login_btn)
     username = driver.find_element(By.NAME, "username")
@@ -47,6 +49,7 @@ def Login():
     username.send_keys(email)
     pwd = driver.find_element(By.NAME, "password")
     pwd.send_keys(password)
+    sleep(5000)
     driver.find_element_by_xpath("//button[@class='btn-red btn-signin']").click()
     sleep(2)
     driver.implicitly_wait(50)
