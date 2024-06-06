@@ -61,6 +61,7 @@ def SelectShow():
 def SelectZone(zone=zone):    
     global zone_list
     list_zone=driver.find_elements_by_xpath(f"//*[@name='uMap2Map']/area")
+    # get zone numbers
     row=zone_list=len(list_zone)
     index=0
     cur_url=nextUrl=driver.current_url
