@@ -26,10 +26,12 @@ def zone_selection():
     wait = WebDriverWait(driver, 0.5)
     buttons = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='btn']")))
     buttons[1].click()
-    sleep(2)
+    #sleep(2)
     # find wanted zone by css selector 
     # dynamic finding
-    zone_number = "D"  # Change this to the seat number you want
+
+    zone_number = "A1"  # Change this to the seat number you want
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'area[href="#fixed.php#{zone_number}"]')))
     zone = driver.find_element(By.CSS_SELECTOR, f'area[href="#fixed.php#{zone_number}"]')
     # seat = driver.find_element(By.CSS_SELECTOR, 'area[href="#fixed.php#A1"]')
     # find element by xpath
