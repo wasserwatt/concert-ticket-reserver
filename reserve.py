@@ -24,6 +24,8 @@ with open('userdetail.json') as f:
 userUrl = data['concertUrl']
 userZones = data['zone']
 userSeats = int(data['seats'])  # Convert the string to an integer
+userRound = int(data['round'])
+
 print("userSeats: ", userSeats)
 print("userZones: ", userZones)
 print("userUrl: ", userUrl)
@@ -41,7 +43,7 @@ def open_and_go_to_site():
     driver.get(url)
     round=len(driver.find_elements(By.XPATH, "//div[@class='box-event-list']/div[2]/div"))
     print("\n")
-    print("round:====================", round)
+    print("round list", round)
     print("\n")
 
 def zone_selection():
@@ -49,7 +51,7 @@ def zone_selection():
     # Wait until the buttons are present
     wait = WebDriverWait(driver, 0.5)
     buttons = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='btn']")))
-    buttons[1].click()
+    buttons[userRound].click()
 
     # find wanted zone by css selector 
     # dynamic finding
