@@ -11,7 +11,10 @@ url = "https://www.thaiticketmajor.com/concert/bouncy-boun-concert.html"
 opts = Options()
 opts.add_experimental_option('debuggerAddress', 'localhost:1111')
 driver = webdriver.Chrome(options=opts)
-
+# Global variable to store available zones and seats
+available_seats = {}
+preferred_zones = ['A1', 'A2', 'A3']
+preferred_seats = 4
 
 def open_and_go_to_site():
     driver.get(url)
@@ -84,28 +87,54 @@ zone_list = 0
 list_zone = driver.find_elements(By.XPATH, "//*[@name='uMap2Map']/area")
 row=zone_list=len(list_zone)
 
+def get_free_zone():
+    global available_seats
+    rows = driver.find_elements(By.XPATH, '//table[@class="table"]/tbody/tr')
+    for row in rows:
+        # Find the zone and number of seats in each row
+        zone = row.find_element(By.XPATH, './td[1]').text
+        seats = int(row.find_element(By.XPATH, './td[2]').text)
+
+        # If the number of seats is greater than 0, print the zone and number of seats
+        if seats >= preferred_seats:
+            #available_seats[zone] = seats
+            available_seats[zone] = {'seats': seats, 'row': row}
+            #print(f"Zone {zone} has {seats} available seats.")
 
 def go_to_next_zone():
-    global next_zone_index
-    while next_zone_index <= row:
-        driver.back()
-        driver.implicitly_wait(40)
-        driver.find_element(By.PARTIAL_LINK_TEXT, "ที่นั่งว่าง / Seats Available").click()
-        driver.implicitly_wait(30)
-        for j in range(2, row + 1):
-            amount = driver.find_element(By.XPATH, f"//*[@class='container-popup']/table[1]/tbody[1]/tr[{j}]/td[2]").text
-            zone_id = driver.find_element(By.XPATH, f"//*[@class='container-popup']/table[1]/tbody[1]/tr[{j}]/td[1]").text
-            if amount != "0" or amount == "Available":
-                zone_number = "H"  # Change this to the seat number you want
-                zone = driver.find_element(By.CSS_SELECTOR, f'area[href="#fixed.php#{zone_number}"]')
-                # seat = driver.find_element(By.CSS_SELECTOR, 'area[href="#fixed.php#A1"]')
-                # find element by xpath
-                # seat = driver.find_element(By.XPATH, '//*[@id="Map4"]/area[5]')
-                print("\n")
-                print(f'Element found: {zone}')
-                zone.click()
-                SelectSeat(4)
-            next_zone_index += 1
+    print("entered go_to_next_zone()")
+    driver.implicitly_wait(40)
+    driver.find_element(By.ID, "popup-avail").click()
+    driver.implicitly_wait(30)
+    get_free_zone()
+    # Try to find a preferred zone first
+    for zone in preferred_zones:
+        # If the zone is available, click the row and break the loop
+        if zone in available_seats:
+            available_seats[zone]['row'].click()
+            SelectSeat(preferred_seats)
+            break
+    # If no preferred zone is available, go to the next available zone
+    for zone, info in available_seats.items():
+        info['row'].click()
+        SelectSeat(preferred_seats)
+        break
+    
+
+    # for j in range(2, row + 1):
+    #     amount = driver.find_element(By.XPATH, f"//*[@class='container-popup']/table[1]/tbody[1]/tr[{j}]/td[2]").text
+    #     zone_id = driver.find_element(By.XPATH, f"//*[@class='container-popup']/table[1]/tbody[1]/tr[{j}]/td[1]").text
+    #     if amount != "0" or amount == "Available":
+    #         zone_number = "H"  # Change this to the seat number you want
+    #         zone = driver.find_element(By.CSS_SELECTOR, f'area[href="#fixed.php#{zone_number}"]')
+    #         # seat = driver.find_element(By.CSS_SELECTOR, 'area[href="#fixed.php#A1"]')
+    #         # find element by xpath
+    #         # seat = driver.find_element(By.XPATH, '//*[@id="Map4"]/area[5]')
+    #         print("\n")
+    #         print(f'Element found: {zone}')
+    #         zone.click()
+    #         SelectSeat(4)
+    #     next_zone_index += 1
 
 
 def check_zone_availibility():
@@ -123,14 +152,16 @@ def check_zone_availibility():
         print("Switching to next zone")
         # Click the back button
         driver.back()
+        go_to_next_zone()
 
     else:
         print("Seat available")
         print("Proceeding to seat selection")
-        SelectSeat(4)
+        SelectSeat(preferred_seats)
         print("called select_seat()")
 
 
 open_and_go_to_site()
 zone_selection()
 check_zone_availibility()
+print(available_seats)
