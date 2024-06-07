@@ -13,7 +13,7 @@ opts.add_experimental_option('debuggerAddress', 'localhost:1111')
 driver = webdriver.Chrome(options=opts)
 # Global variable to store available zones and seats
 available_seats = {}
-preferred_zones = ['A1', 'A2', 'A3']
+preferred_zones = ['A1', 'A2', 'F']
 preferred_seats = 4
 
 def open_and_go_to_site():
@@ -78,14 +78,17 @@ def SelectSeat(number):
             break
     
     if count != 0:
-        print("call confirm_ticketprotect()")
+        print("entering confirm_ticketprotect")
+        # Find the confirm button by its ID and click it
+        confirm_button = driver.find_element(By.ID, 'booknow')
+        confirm_button.click()
         #confirm_ticketprotect()
     else:
         print("Sorry, not enough consecutive seats are available.")
 
-zone_list = 0
-list_zone = driver.find_elements(By.XPATH, "//*[@name='uMap2Map']/area")
-row=zone_list=len(list_zone)
+# zone_list = 0
+# list_zone = driver.find_elements(By.XPATH, "//*[@name='uMap2Map']/area")
+# row=zone_list=len(list_zone)
 
 def get_free_zone():
     global available_seats
