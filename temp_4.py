@@ -42,7 +42,12 @@ def zone_selection():
     print("\n")
     print(f'Element found: {zone}')
     zone.click()
-    
+
+def confirm_seats():
+    # Find the confirm button by its ID and click it
+        confirm_button = driver.find_element(By.ID, 'booknow')
+        confirm_button.click()
+
 def SelectSeat(number):
     count = 0
     max_seats_per_buy = 4
@@ -79,9 +84,8 @@ def SelectSeat(number):
     
     if count != 0:
         print("entering confirm_ticketprotect")
-        # Find the confirm button by its ID and click it
-        confirm_button = driver.find_element(By.ID, 'booknow')
-        confirm_button.click()
+        confirm_seats()
+        
         #confirm_ticketprotect()
     else:
         print("Sorry, not enough consecutive seats are available.")
