@@ -2,8 +2,8 @@
     "email":"pidpipa.s@gmail.com",
     "pwd":"triplepea22",
     "concertUrl":"https://www.thaiticketmajor.com/concert/bouncy-boun-concert.html",
-    "zone":["A1","A2","F"],
-    "seats":"4",
+    "zone":["A1","A2","F", "D"],
+    "seats":"3",
     "show":"1"
 }
 

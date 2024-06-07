@@ -1,3 +1,4 @@
+import json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
@@ -10,14 +11,31 @@ from selenium.common.exceptions import NoAlertPresentException
 
 
 # set up
-url = "https://www.thaiticketmajor.com/concert/bouncy-boun-concert.html"
+#url = "https://www.thaiticketmajor.com/concert/bouncy-boun-concert.html"
 opts = Options()
 opts.add_experimental_option('debuggerAddress', 'localhost:1111')
 driver = webdriver.Chrome(options=opts)
+
+# Load the JSON file
+with open('userdetail.json') as f:
+    data = json.load(f)
+
+# Get the values
+userUrl = data['concertUrl']
+userZones = data['zone']
+userSeats = int(data['seats'])  # Convert the string to an integer
+print("userSeats: ", userSeats)
+print("userZones: ", userZones)
+print("userUrl: ", userUrl)
+
 # Global variable to store available zones and seats
 available_seats = {}
-preferred_zones = ['A1', 'A2', 'F']
-preferred_seats = 4
+preferred_zones = userZones
+print("preferred_zones: ", preferred_zones)
+url = userUrl
+print("url: ", url)
+preferred_seats = userSeats
+print("preferred_seats: ", preferred_seats)
 
 def open_and_go_to_site():
     driver.get(url)
@@ -36,7 +54,7 @@ def zone_selection():
     # find wanted zone by css selector 
     # dynamic finding
 
-    zone_number = "A1"  # Change this to the seat number you want
+    zone_number = preferred_zones[0]  # Change this to the seat number you want
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'area[href="#fixed.php#{zone_number}"]')))
     zone = driver.find_element(By.CSS_SELECTOR, f'area[href="#fixed.php#{zone_number}"]')
     # seat = driver.find_element(By.CSS_SELECTOR, 'area[href="#fixed.php#A1"]')
@@ -145,7 +163,7 @@ def go_to_next_zone():
     driver.implicitly_wait(30)
     get_free_zone()
     # Try to find a preferred zone first
-    for zone in preferred_zones:
+    for zone in preferred_zones[1:]:
         # If the zone is available, click the row and break the loop
         if zone in available_seats:
             available_seats[zone]['row'].click()
