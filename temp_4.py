@@ -5,6 +5,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from time import sleep
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoAlertPresentException
+
 
 # set up
 url = "https://www.thaiticketmajor.com/concert/bouncy-boun-concert.html"
@@ -45,8 +48,35 @@ def zone_selection():
 
 def confirm_seats():
     # Find the confirm button by its ID and click it
-        confirm_button = driver.find_element(By.ID, 'booknow')
-        confirm_button.click()
+    confirm_button = driver.find_element(By.ID, 'booknow')
+    confirm_button.click()
+
+    try:
+        # Check if the error message is displayed
+        error_message = driver.find_element(By.ID, 'alertmessage')
+        if error_message.is_displayed():
+            # Click the close button
+            close_button = driver.find_element(By.XPATH, '//button[text()="Close"]')
+            close_button.click()
+
+            # Select other seats and try to confirm again
+            go_to_next_zone()
+            confirm_seats()
+    except NoSuchElementException:
+        # If the error message is not found, do nothing
+        pass
+
+    try:
+        # Check if a browser alert is present
+        alert = driver.switch_to.alert
+        alert.accept()
+
+        # Select other seats and try to confirm again
+        go_to_next_zone()
+        confirm_seats()
+    except NoAlertPresentException:
+        # If no alert is present, do nothing
+        pass
 
 def SelectSeat(number):
     count = 0
