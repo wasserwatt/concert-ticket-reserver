@@ -1,164 +1,201 @@
+import json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import json
-from time import sleep
-import sys
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from time import sleep
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoAlertPresentException
 
-#driver = webdriver.Chrome(executable_path='C:\Python312\Scripts')
-chrome_option = Options()
-chrome_option.add_experimental_option("detach", True)
-driver = webdriver.Chrome()
-base_url="https://www.thaiticketmajor.com/concert/"
-userdetail_file="userdetail.json"
-count=0
-with open(userdetail_file, 'r') as f:
-    user = json.load(f)
-email=user["email"]
-password=user["pwd"]
-zone=user["zone"]
-concert=user["concert"]
-seat=int(user["seats"])
-zone_list=0
-show=int(user["show"])
-next_zone_index=1
 
-def setUp():
-    driver.maximize_window()
-    driver.get(base_url)
-    driver.implicitly_wait(30)
+# set up
+#url = "https://www.thaiticketmajor.com/concert/bouncy-boun-concert.html"
+opts = Options()
+opts.add_experimental_option('debuggerAddress', 'localhost:1111')
+driver = webdriver.Chrome(options=opts)
 
-def prepUserData():
-    print("email=", email)
-    print("password=", password)
-    print("zone=", zone)
-    print("concert=", concert)
-    print("seat=", seat)
-    print("show=", show)
+# Load the JSON file
+with open('userdetail.json') as f:
+    data = json.load(f)
+
+# Get the values
+userUrl = data['concertUrl']
+userZones = data['zone']
+userSeats = int(data['seats'])  # Convert the string to an integer
+print("userSeats: ", userSeats)
+print("userZones: ", userZones)
+print("userUrl: ", userUrl)
+
+# Global variable to store available zones and seats
+available_seats = {}
+preferred_zones = userZones
+print("preferred_zones: ", preferred_zones)
+url = userUrl
+print("url: ", url)
+preferred_seats = userSeats
+print("preferred_seats: ", preferred_seats)
+
+def open_and_go_to_site():
+    driver.get(url)
+    round=len(driver.find_elements(By.XPATH, "//div[@class='box-event-list']/div[2]/div"))
+    print("\n")
+    print("round:====================", round)
+    print("\n")
+
+def zone_selection():
+    # Zone selection
+    # Wait until the buttons are present
+    wait = WebDriverWait(driver, 0.5)
+    buttons = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='btn']")))
+    buttons[1].click()
+
+    # find wanted zone by css selector 
+    # dynamic finding
+    zone_number = preferred_zones[0]  # Change this to the seat number you want
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'area[href="#fixed.php#{zone_number}"]')))
+    zone = driver.find_element(By.CSS_SELECTOR, f'area[href="#fixed.php#{zone_number}"]')
+    # seat = driver.find_element(By.CSS_SELECTOR, 'area[href="#fixed.php#A1"]')
+    # find element by xpath
+    # seat = driver.find_element(By.XPATH, '//*[@id="Map4"]/area[5]')
+    print("\n")
+    print(f'Element found: {zone}')
+    zone.click()
+
+def confirm_seats():
+    # Find the confirm button by its ID and click it
+    confirm_button = driver.find_element(By.ID, 'booknow')
+    confirm_button.click()
+
+    try:
+        # Wait for the error message to be present
+        WebDriverWait(driver, 2.5).until(EC.presence_of_element_located((By.ID, 'alertmessage')))
+        # Check if the error message is displayed
+        error_message = driver.find_element(By.ID, 'alertmessage')
+        if error_message.is_displayed():
+                # Click the close button
+                close_button = driver.find_element(By.XPATH, '//button[text()="Close"]')
+                close_button.click()
+                print("Error message found and closed")
+                # Select other seats and try to confirm again
+                # go_to_next_zone()
+                # confirm_seats()
+    except NoSuchElementException:
+        # If the error message is not found, do nothing
+        pass
+
+    try:
+        # Check if a browser alert is present
+        alert = driver.switch_to.alert
+        alert.accept()
+
+        # Select other seats and try to confirm again
+        go_to_next_zone()
+        confirm_seats()
+    except NoAlertPresentException:
+        # If no alert is present, do nothing
+        pass
+
+def SelectSeat(number):
+    count = 0
+    max_seats_per_buy = 4
     
+    # Ensure the number of seats requested doesn't exceed the maximum allowed
+    if number > max_seats_per_buy:
+        number = max_seats_per_buy
 
-def Login():
-    # driver.find_element_by_xpath("//*[@class='btn-signin item d-none d-lg-inline-block']").click()
-    print("login initiated")
-    sleep(5)
-    print("pass 100 seconds")
-    login_btn = driver.find_element(By.XPATH, "//*[@class='btn-signin item d-none d-lg-inline-block']").click()
-    print("found login button element by XPATH: ", login_btn)
-    username = driver.find_element(By.NAME, "username")
-    print("found username element by ID: ", username)
-    username.send_keys(email)
-    pwd = driver.find_element(By.NAME, "password")
-    pwd.send_keys(password)
-    sleep(5000)
-    driver.find_element_by_xpath("//button[@class='btn-red btn-signin']").click()
-    sleep(2)
-    driver.implicitly_wait(50)
-    cur_url=driver.current_url
-    while cur_url == base_url:
-        driver.find_element_by_partial_link_text(f"{concert}").click()
-        driver.implicitly_wait(30)
-        cur_url=driver.current_url
-    driver.implicitly_wait(30)
-
-def SelectShow():
-    row=len(driver.find_elements_by_xpath("//div[@class='box-event-list']/div[2]/div"))
-    #select round
-    driver.find_element_by_xpath(f"//div[@class='box-event-list']/div[2]/div[{show}]/div[2]/span[1]/a[1]").click()
-    driver.implicitly_wait(30)
+    rows = driver.find_elements(By.XPATH, "//*[@id='tableseats']/tbody[1]/tr")
+    
+    for i in range(1, len(rows) + 1):
+        columns = driver.find_elements(By.XPATH, f"//*[@id='tableseats']/tbody[1]/tr[{i}]/td")
+        consecutive_seats = []
         
-
-    selected=driver.find_element_by_xpath(f"//*[@id='rdId']/option[1]").text
-    # if after click and round is not selected
-    if  selected=="เลือกรอบการแสดง / Select round":
-        driver.find_element_by_id("rdId").click()
-        driver.implicitly_wait(30)
-        driver.find_element_by_xpath(f"//*[@div='select-date fix-me']/option[{show+1}]").click()
-        driver.implicitly_wait(30)
-
-
-def SelectZone(zone=zone):    
-    global zone_list
-    list_zone=driver.find_elements_by_xpath(f"//*[@name='uMap2Map']/area")
-    row=zone_list=len(list_zone)
-    index=0
-    cur_url=nextUrl=driver.current_url
-    print(f"Zone:{zone}")
-    for i in range(1,row+1):
-        result=find(zone,list_zone[i-1].get_attribute("href"))
-        if result:
-            index=i
+        for j in range(2, len(columns) + 1):
+            cell = driver.find_element(By.XPATH, f"//*[@id='tableseats']/tbody[1]/tr[{i}]/td[{j}]")
+            text = cell.text
+            
+            if text != " " and text != "":
+                consecutive_seats.append(cell)
+            else:
+                consecutive_seats = []
+                
+            if len(consecutive_seats) == number:
+                for seat in consecutive_seats:
+                    seat.click()
+                    count += 1
+                
+                if count == number:
+                    break
+                
+        if count == number:
             break
-    while cur_url == nextUrl:
-        driver.find_element_by_xpath(f"//*[@name='uMap2Map']/area[{index}]").click()
-        driver.implicitly_wait(30)
-        nextUrl=driver.current_url
-
-def find(msg,link):
-    get_zone=link.split('#')
-    if msg == get_zone[2]:
-        return True
-    else:
-        return False
-
-
-        
-
-def SelectSeat(number=seat):
-    global count
-    row=len(driver.find_elements_by_xpath("//*[@id='tableseats']/tbody[1]/tr"))
-    for i in range(1,row+1):
-        column=len(driver.find_elements_by_xpath(f"//*[@id='tableseats']/tbody[1]/tr[{i}]/td"))
-        for j in range(2,column+1):
-            text=driver.find_element_by_xpath(f"//*[@id='tableseats']/tbody[1]/tr[{i}]/td[{j}]").text
-            nrow=driver.find_element_by_xpath(f"//*[@id='tableseats']/tbody[1]/tr[{i}]/td[{j}]").get_attribute("title")
-            if text==" ":
-                print(f"seats:{nrow} not available")
-            if text!=" " and count<number and text!="":
-                driver.find_element_by_xpath(f"//*[@id='tableseats']/tbody[1]/tr[{i}]/td[{j}]").click()
-                count+=1
-            if count==number:
-                break
-        if count==number:
-                break
-    if count!=0:
-        confirm_ticketprotect()
-
-#if your zone not have any seat.
-def go_to_next_zone():
-    global next_zone_index
-    while next_zone_index<=zone_list:
-        driver.find_element_by_partial_link_text("ย้อนกลับ / Back").click()
-        driver.implicitly_wait(40)
-        driver.find_element_by_partial_link_text("ที่นั่งว่าง / Seats Available").click()
-        driver.implicitly_wait(30)
-        for j in range(2,zone_list+1):
-            amount=driver.find_element_by_xpath(f"//*[@class='container-popup']/table[1]/tbody[1]/tr[{j}]/td[2]").text
-            i=driver.find_element_by_xpath(f"//*[@class='container-popup']/table[1]/tbody[1]/tr[{j}]/td[1]").text
-            if amount!="0" or amount=="Available":
-                SelectZone(i)
-                SelectSeat()
-            next_zone_index+=1
-    if count==0:
-        print(f"Sorry, this concert don't have any seat for you.")
-        sys.exit()
-
-
     
-
-def confirm_ticketprotect():
-    driver.find_element_by_partial_link_text("ยืนยันที่นั่ง / Book Now").click()
-    driver.implicitly_wait(50)
-    driver.find_element_by_partial_link_text("Continue").click()
-    driver.implicitly_wait(40)
+    if count != 0:
+        print("entering confirm_ticketprotect")
+        confirm_seats()
         
+        #confirm_ticketprotect()
+    else:
+        print("Sorry, not enough consecutive seats are available.")
 
- 
+def get_free_zone():
+    global available_seats
+    rows = driver.find_elements(By.XPATH, '//table[@class="table"]/tbody/tr')
+    for row in rows:
+        # Find the zone and number of seats in each row
+        zone = row.find_element(By.XPATH, './td[1]').text
+        seats = int(row.find_element(By.XPATH, './td[2]').text)
 
-setUp()
-prepUserData()
-Login()
-SelectShow()
-SelectZone(zone)
-SelectSeat()
-if count==0:
-    go_to_next_zone()
+        # If the number of seats is greater than 0, print the zone and number of seats
+        if seats >= preferred_seats:
+            #available_seats[zone] = seats
+            available_seats[zone] = {'seats': seats, 'row': row}
+            #print(f"Zone {zone} has {seats} available seats.")
+
+def go_to_next_zone():
+    print("entered go_to_next_zone()")
+    driver.implicitly_wait(40)
+    driver.find_element(By.ID, "popup-avail").click()
+    driver.implicitly_wait(30)
+    get_free_zone()
+    # Try to find a preferred zone first
+    for zone in preferred_zones[1:]:
+        # If the zone is available, click the row and break the loop
+        if zone in available_seats:
+            available_seats[zone]['row'].click()
+            SelectSeat(preferred_seats)
+            break
+    # If no preferred zone is available, go to the next available zone
+    for zone, info in available_seats.items():
+        info['row'].click()
+        SelectSeat(preferred_seats)
+        break
+    
+def check_zone_availibility():
+    # Find all elements with the class 'txt-label'
+    elements = driver.find_elements(By.CSS_SELECTOR, 'span.txt-label')
+
+    # Loop through the elements and print their text
+    print("\n")
+    for element in elements:
+        print(f'Found element: {element}')
+        print(f'The text is: {element.text}')
+
+    if element.text == "NOT AVAILABLE":
+        print("Seat not available")
+        print("Switching to next zone")
+        # Click the back button
+        driver.back()
+        go_to_next_zone()
+
+    else:
+        print("Seat available")
+        print("Proceeding to seat selection")
+        SelectSeat(preferred_seats)
+        print("called select_seat()")
+
+open_and_go_to_site()
+zone_selection()
+check_zone_availibility()
+print(available_seats)
