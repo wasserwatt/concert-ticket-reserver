@@ -1,0 +1,17 @@
+☐ Problems
+    ☐ @critical 
+    Duplicate seats Alert
+        ☐ need to click duplicate seats popup 
+        ☐ then bot re-click the seat
+            ☐ if the seat is not clikable then bot refresh the page and re-click the seat
+        ☐ then bot click confirm the seat
+    ☐ @high 
+        ☐ make bot available to wait during human interaction
+            ☐ Concert page queue waiting
+                Concert Countdown Timer
+                ☐ after the queue is done the bot should start to click the ROUND button
+                Concert Captcha
+                ☐ after the user Captcha is done the bot should start to click the ROUND button
+            ☐ Captcha queue waiting
+                ZONE Captcha
+                ☐ after the queue is done the bot should start to click the ZONE button

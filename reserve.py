@@ -29,6 +29,7 @@ userRound = int(data['round'])
 print("userSeats: ", userSeats)
 print("userZones: ", userZones)
 print("userUrl: ", userUrl)
+print("userRound: ", userRound)
 
 # Global variable to store available zones and seats
 available_seats = {}
